@@ -1,4 +1,4 @@
-package dreamer
+package main
 
 import (
 	"math"
@@ -75,7 +75,7 @@ func NewEntityManager(filepath string) *EntityManager {
 				properties = append(properties, OUTPUT_BOTTOM)
 			}
 		}
-		entityManager.addEntityAtCoordWithProps(NewCoord(row, col), properties)
+		entityManager.AddEntityAtCoordWithProperties(NewCoord(row, col), properties)
 		col++
 		if col == gridSize {
 			row++
@@ -157,7 +157,7 @@ func (e *EntityManager) MoveEntityWithIDToCoord(entityID EntityID, newCoord Coor
 */
 
 func (e EntityManager) EntityHasProperty(entity_id EntityID, property Property) bool {
-	entityIdsWithProperty, found = e.propertyToEntityIDs[property]
+	entityIdsWithProperty, found := e.propertyToEntityIDs[property]
 	if found {
 		for _, entityIdWithProperty := range entityIdsWithProperty {
 			if entityIdWithProperty == entity_id {
@@ -204,7 +204,7 @@ func (e *EntityManager) RemoveEntity(entityID EntityID) {
 
 	// 2. Go to that coord and remove the entity from that coord list (because we are only allowing one coord per entity, this works!)
 	// coord_to_entity_ids[coord].remove(entity_id)
-	entityIdsAtCoord, found = e.coordToEntityIDs[coord]
+	entityIdsAtCoord, found := e.coordToEntityIDs[coord]
 	if found {
 		updatedEntityIdsAtCoord := removeEntityIDFromSlice(entityIdsAtCoord, entityID)
 		if len(updatedEntityIdsAtCoord) == 0 {
@@ -250,7 +250,7 @@ func removeEntityIDFromSlice(ids []EntityID, targetID EntityID) []EntityID {
 func removeEntityFromSlice(entities []Entity, targetID EntityID) []Entity {
 	writeIndex := 0
 	for _, currentEntity := range entities {
-		if currentEntity.Id != targetID {
+		if currentEntity.ID != targetID {
 			entities[writeIndex] = currentEntity
 			writeIndex++
 		}

@@ -1,10 +1,10 @@
-package dreamer
+package main
 
 import "math/rand"
 
-
 type Orchestrator struct {
 	entityManager *EntityManager
+	stepNumber    int
 }
 
 func NewOrchestrator(entityManager *EntityManager) *Orchestrator {
@@ -15,13 +15,13 @@ func NewOrchestrator(entityManager *EntityManager) *Orchestrator {
 
 func (o *Orchestrator) update() {
 	o.updateAdders()
-	
+
 	o.updateDeleters()
 }
 
 func (o *Orchestrator) move() {
-	entityIdsAlreadyMoved := make([]EntityID,0,100)
-	moves = o.generateMoves(entityIdsAlreadyMoved)
+	entityIdsAlreadyMoved := make([]EntityID, 0, 100)
+	moves := o.generateMoves(entityIdsAlreadyMoved)
 
 	for len(moves) > 0 {
 		o.executeMoves(moves)
@@ -29,7 +29,6 @@ func (o *Orchestrator) move() {
 		moves = o.generateMoves(entityIdsAlreadyMoved)
 	}
 }
-
 
 func (o *Orchestrator) updateEntityIdsAlreadyMoved(entityIdsAlreadyMoved *[]EntityID, moves []Move) {
 	// Add unique entity IDs from the moves
@@ -54,32 +53,31 @@ func (o *Orchestrator) generateMoves(entityIdsAlreadyMoved []EntityID) []Move {
 }
 
 func (o *Orchestrator) getAllValidPossibleMoves(entityIdsAlreadyMoved []EntityID) []Move {
-	entityIds = o.entity_manager.GetAllEntityIDs()
+	entityIds := o.entityManager.GetAllEntityIDs()
 	allValidPossibleMoves := make([]Move, 0, 100)
 	for _, entityId := range entityIds {
 		if containsEntity(entityIdsAlreadyMoved, entityId) {
-            continue // skip entities that already moved
-        }
+			continue // skip entities that already moved
+		}
 		validMoveCoords := o.getAllValidMoveCoordsForEntity(entityId)
 		for _, validMoveCoord := range validMoveCoords {
 			allValidPossibleMoves = append(allValidPossibleMoves, Move{
-                EntityID: entityId,
-                Coord:    validMoveCoord,
-            })
+				EntityID: entityId,
+				Coord:    validMoveCoord,
+			})
 		}
 	}
 	return allValidPossibleMoves
 }
 
-
-func (o *Orchestrator) getAllValidMoveCoordsForEntity(entityId EntityID) {
+func (o *Orchestrator) getAllValidMoveCoordsForEntity(entityId EntityID) []Coord {
 	coordsOfValidMovesForEntity := make([]Coord, 0, 50)
 	outputDirections := o.getOutputDirectionsForCellWithEntityID(entityId)
-	for outputDirection := range outputDirections {
+	for _, outputDirection := range outputDirections {
 		coordToMoveTo := o.mapOutputDirectionToCoord(entityId, outputDirection)
 		isValidMove := o.isEntityMoveValid(entityId, coordToMoveTo)
 		if isValidMove {
-			coords_of_valid_moves_for_entity := append(coords_of_valid_moves_for_entity, coordToMoveTo)
+			coordsOfValidMovesForEntity = append(coordsOfValidMovesForEntity, coordToMoveTo)
 		}
 	}
 	return coordsOfValidMovesForEntity
@@ -91,7 +89,7 @@ func (o *Orchestrator) isEntityMoveValid(entityId EntityID, coordToMoveTo Coord)
 		return false
 	}
 	coordOfEntity := o.entityManager.GetCoordOfEntityByID(entityId)
-	
+
 	if coordOfEntity.IsAtRightOf(coordToMoveTo) {
 		// Moving to the right
 		entityIdsAtRightOfEntity := o.entityManager.GetEntityIDsAtCoord(coordToMoveTo)
@@ -180,19 +178,18 @@ func (o *Orchestrator) getCoordAtBottomOf(entityID EntityID) Coord {
 	return NewCoord(coordOfEntity.Row+1, coordOfEntity.Col)
 }
 
-
 func (o *Orchestrator) getOutputDirectionsForCellWithEntityID(entityID EntityID) []Property {
 	outputDirectionProperties := []Property{}
 	coordOfEntity := o.entityManager.GetCoordOfEntityByID(entityID)
 	entityIdsOnCellWithEntity := o.entityManager.GetEntityIDsAtCoord(coordOfEntity)
-	
+
 	outputProperties := []Property{
 		OUTPUT_LEFT,
 		OUTPUT_RIGHT,
 		OUTPUT_TOP,
 		OUTPUT_BOTTOM,
 	}
-	
+
 	for _, entityIdOnCellWithEntity := range entityIdsOnCellWithEntity {
 		if entityIdOnCellWithEntity == entityID {
 			continue
@@ -210,7 +207,7 @@ func (o *Orchestrator) getOutputDirectionsForCellWithEntityID(entityID EntityID)
 						}
 					}
 					if !found {
-						outputDirectionProperties = append(outputDirectionProperties, property1)
+						outputDirectionProperties = append(outputDirectionProperties, outputProperty)
 					}
 				}
 			}
@@ -220,35 +217,104 @@ func (o *Orchestrator) getOutputDirectionsForCellWithEntityID(entityID EntityID)
 }
 
 func containsEntity(list []EntityID, id EntityID) bool {
-    for _, v := range list {
-        if v == id {
-            return true
-        }
-    }
-    return false
+	for _, v := range list {
+		if v == id {
+			return true
+		}
+	}
+	return false
 }
 
-func (o *Orchestrator) resolveFinalMovesFromAllValidMoves() []Move {
+func (o *Orchestrator) resolveFinalMovesFromAllValidMoves(movesList []Move) []Move {
+	for !o.isValidMoveset(movesList) {
+		// 1. Pick random unique entity
+		entityIdOfEntityToMove := o.getRandomEntityIdFromMovesList(movesList)
 
+		// 2. Pick a random move of that entity
+		randomMoveFromSelectedEntityId := o.getRandomMoveFromEntityId(entityIdOfEntityToMove, movesList)
+
+		// 3. Delete necessary moves from movesList
+		movesList = o.filterMovesList(randomMoveFromSelectedEntityId, movesList)
+	}
+	return movesList
 }
 
+func (o *Orchestrator) isValidMoveset(movesList []Move) bool {
+	uniqueDestinations := make(map[Coord]bool)
+	uniqueEntityIds := make(map[EntityID]bool)
+
+	for _, move := range movesList {
+		if uniqueEntityIds[move.EntityID] {
+			return false
+		}
+		if uniqueDestinations[move.Coord] {
+			return false
+		}
+		uniqueDestinations[move.Coord] = true
+		uniqueEntityIds[move.EntityID] = true
+	}
+	return true
+}
+
+func (o *Orchestrator) getRandomEntityIdFromMovesList(movesList []Move) EntityID {
+	if len(movesList) == 0 {
+		return ""
+	}
+	randomIndex := rand.Intn(len(movesList))
+	return movesList[randomIndex].EntityID
+}
+
+func (o *Orchestrator) getRandomMoveFromEntityId(entityId EntityID, movesList []Move) Move {
+	movesWithEntityId := o.getMovesWithEntityId(entityId, movesList)
+	if len(movesWithEntityId) == 0 {
+		return Move{}
+	}
+	randomIndex := rand.Intn(len(movesWithEntityId))
+	return movesWithEntityId[randomIndex]
+}
+
+func (o *Orchestrator) getMovesWithEntityId(entityId EntityID, movesList []Move) []Move {
+	movesWithEntityId := make([]Move, 0)
+	for _, move := range movesList {
+		if move.EntityID == entityId {
+			movesWithEntityId = append(movesWithEntityId, move)
+		}
+	}
+	return movesWithEntityId
+}
+
+func (o *Orchestrator) filterMovesList(moveToFilterBy Move, movesList []Move) []Move {
+	updatedMovesList := make([]Move, 0)
+	for _, move := range movesList {
+		// Delete all other moves that have the same entity ID
+		if move.EntityID == moveToFilterBy.EntityID {
+			continue
+		}
+		// Delete all other moves that have the same destination
+		if move.Coord == moveToFilterBy.Coord {
+			continue
+		}
+		updatedMovesList = append(updatedMovesList, move)
+	}
+	return updatedMovesList
+}
 
 func (o *Orchestrator) Step() {
-	o.update()
 	o.move()
+	o.update()
+	o.stepNumber++
 }
-
 
 func (o *Orchestrator) updateAdders() {
 	adderEntityIds := o.entityManager.GetAllEntityIDsWithProperty(ADDER)
-	for adderEntityId := range adderEntityIds {
+	for _, adderEntityId := range adderEntityIds {
 		// 0. create an entity to spawn (in the future this might be the type of adder)
 		// Once we create the entity we can assume the props are valid as the check would be on the constructor
-		
+
 		if !shouldPlaceNewEntity() {
 			continue
 		}
-		
+
 		propertiesForPotentialNewEntity := []Property{MOVABLE}
 		// 0. validate that the props combination is legal
 		if !IsValidProps(propertiesForPotentialNewEntity) {
@@ -257,15 +323,15 @@ func (o *Orchestrator) updateAdders() {
 
 		// 1. validate to check if we can spawn an entity at the coord (generic, used by adder) with the props
 		coordOfAdderEntity := o.entityManager.GetCoordOfEntityByID(adderEntityId)
-		
-		canSpawn := canSpawnEntityAtCoordWithProperties(propertiesForPotentialNewEntity, coordOfAdderEntity)
 
+		canSpawn := o.canSpawnEntityAtCoordWithProperties(propertiesForPotentialNewEntity, coordOfAdderEntity)
+
+		if !canSpawn {
+			continue
+		}
 		// 2. actually spawn an entity at that coord
-		o.entityManager.AddEntityAtCoordWithProperties(propertiesForPotentialNewEntity, coordOfAdderEntity)
+		o.entityManager.AddEntityAtCoordWithProperties(coordOfAdderEntity, propertiesForPotentialNewEntity)
 
-		
-
-		
 	}
 }
 
@@ -293,51 +359,51 @@ func IsValidProps(properties []Property) bool {
 	}
 
 	outputProperties := map[Property]struct{}{
-        OUTPUT_LEFT:   {},
-        OUTPUT_RIGHT:  {},
-        OUTPUT_TOP:    {},
-        OUTPUT_BOTTOM: {},
-    }
+		OUTPUT_LEFT:   {},
+		OUTPUT_RIGHT:  {},
+		OUTPUT_TOP:    {},
+		OUTPUT_BOTTOM: {},
+	}
 
 	// Rule 3: if more than one property, they must all be outputs
-    if len(properties) > 1 {
-        for _, property := range properties {
-            _, isOutputProperty := outputProps[property];
+	if len(properties) > 1 {
+		for _, property := range properties {
+			_, isOutputProperty := outputProperties[property]
 			if !isOutputProperty {
-                return false
-            }
-        }
-    }
+				return false
+			}
+		}
+	}
 
 	seen := make(map[Property]struct{})
-    for _, property := range properties {
-        // Rule 1: must be valid
-        if _, ok := validProperties[property]; !ok {
-            return false
-        }
-        // Rule 2: no duplicates
-        if _, already := seen[property]; already {
-            return false
-        }
-        seen[property] = struct{}{}
-    }
+	for _, property := range properties {
+		// Rule 1: must be valid
+		if _, ok := validProperties[property]; !ok {
+			return false
+		}
+		// Rule 2: no duplicates
+		if _, already := seen[property]; already {
+			return false
+		}
+		seen[property] = struct{}{}
+	}
 
-    return true
+	return true
 
 }
 
 // Helper
 func shouldPlaceNewEntity() bool {
-	return rand.Float64() < 0.01
+	return rand.Float64() < 0.5
 }
 
 func (o *Orchestrator) canSpawnEntityAtCoordWithProperties(properties []Property, coord Coord) bool {
-	// before we add an entity we need to make sure the entity is valid given the other entities on it's coord		
-	entityIdsAtCoord = o.entity_manager.GetEntityIDsAtCoord(coord)
+	// before we add an entity we need to make sure the entity is valid given the other entities on it's coord
+	entityIdsAtCoord := o.entityManager.GetEntityIDsAtCoord(coord)
 	/* As a business logic rule, I will say for now:
-		- there can only by one entity with property movable in a cell
-		- there can only be one entity with property adder in a cell
-		- there can only be one entity with property deleter in a cell
+	- there can only by one entity with property movable in a cell
+	- there can only be one entity with property adder in a cell
+	- there can only be one entity with property deleter in a cell
 	*/
 	numAdders := 0
 	numDeleters := 0
@@ -356,18 +422,17 @@ func (o *Orchestrator) canSpawnEntityAtCoordWithProperties(properties []Property
 	}
 
 	// if the new entity wants any of these properties and there's already one, reject
-	if hasProp(props, ADDER) && numAdders > 0 {
+	if hasProp(properties, ADDER) && numAdders > 0 {
 		return false
 	}
-	if hasProp(props, DELETER) && numDeleters > 0 {
+	if hasProp(properties, DELETER) && numDeleters > 0 {
 		return false
 	}
-	if hasProp(props, MOVABLE) && numMovable > 0 {
+	if hasProp(properties, MOVABLE) && numMovable > 0 {
 		return false
 	}
-
 	return true
-	
+
 }
 
 func hasProp(props []Property, p Property) bool {
@@ -379,86 +444,19 @@ func hasProp(props []Property, p Property) bool {
 	return false
 }
 
-
-
-
-
 func (o *Orchestrator) updateDeleters() {
 	deleterEntityIds := o.entityManager.GetAllEntityIDsWithProperty(DELETER)
-	for deleterEntityId := range deleterEntityIds {
+	for _, deleterEntityId := range deleterEntityIds {
 		// A business rule is now that we should delete all other entities on this cell other than this deleter
 		// 1. Get all entities on the same cell as the deleter
 		coordOfDeleter := o.entityManager.GetCoordOfEntityByID(deleterEntityId)
 		entityIdsOnCellWithDeleter := o.entityManager.GetEntityIDsAtCoord(coordOfDeleter)
 
 		// 2. Remove all other entities on the same cell as the deleter, but not the deleter itself
-		for entityIdOnCellWithDeleter := range entityIdsOnCellWithDeleter {
+		for _, entityIdOnCellWithDeleter := range entityIdsOnCellWithDeleter {
 			if entityIdOnCellWithDeleter != deleterEntityId {
 				o.entityManager.RemoveEntity(entityIdOnCellWithDeleter)
 			}
 		}
-	}
-}
-	
-	
-	resolve_final_moves_from_all_valid_moves(moves_list:[](entity_id, Coord)) { // returns one move per entity
-		while !is_valid_moveset(moves_list):
-			// 1. pick random unique entity
-			entity_id_of_entity_to_move = get_random_entity_id_from_moves_list(moves_list)
-			
-			// 2. pick a random unique move of that entity
-			random_move_from_selected_entity_id = get_random_move_from_entity_id(entity_id,moves_list)
-			
-			// Delete necessary moves from moves_list
-			filtered_moves_list = filter_moves_list(random_move_from_selected_entity_id, moves_list)
-			moves_list = filtered_moves_list
-		return moves_list
-	}
-	
-	
-	filter_moves_list(move_to_filter_by, moves_list) {
-		updated_moves_list = []
-		for move in moves_list:
-			// 3. Delete all other moves that have the same destination
-			if move.entity_id == move_to_filter_by.entity_id:
-				continue
-			// 4. Delete all other moves that that entity could take
-			if move.coord == move_to_filter_by.coord:
-				continue
-			updated_moves_list.append(move)
-		return updated_moves_list
-	}
-	
-	get_random_move_from_entity_id(moves_list) {
-		moves_with_entity_id = get_moves_with_entity_id(entity_id, moves_list)
-		return random.choice(moves_with_entity_id)
-	}
-	
-	get_moves_with_entity_id(entity_id, moves_list) {
-		moves_with_entity_id = []
-		for move in moves_list:
-			if move.entity_id == entity_id: // or move[0] to get the entity_id in the tuple
-				moves_with_entity_id.append(move)
-		return moves_with_entity_id
-	}
-	
-	// could be implemented a few ways but this works for now
-	get_random_entity_id_from_moves_list(moves_list): entity_id {
-		return random_choice(moves_list.entity)
-	}
-	
-	// a valid moveset is no repeated entities or destinations
-	is_valid_moveset(moves_list) {
-		unique_destinations = []Coord <- array of Coords
-		unique_entity_ids = [] <- array of entity IDs
-		for entity_id, coord in moves_list:
-			if entity_id in unique_entity_ids:
-				return false
-			if coord in unique_destinations:
-				return false
-	
-			unique_destinations.append(coord)
-			unique_entity_ids.append(entity_id)
-		return true
 	}
 }

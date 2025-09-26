@@ -1,4 +1,4 @@
-package dreamer
+package main
 
 type Coord struct {
 	Row int

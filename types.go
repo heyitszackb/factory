@@ -1,4 +1,4 @@
-package dreamer
+package main
 
 // Property represents different entity properties
 type Property int
@@ -14,3 +14,8 @@ const (
 )
 
 type EntityID string
+
+type Move struct {
+	EntityID EntityID
+	Coord    Coord
+}

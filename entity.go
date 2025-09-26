@@ -1,4 +1,4 @@
-package dreamer
+package main
 
 import (
 	"github.com/google/uuid"
