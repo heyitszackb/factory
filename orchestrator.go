@@ -72,6 +72,113 @@ func (o *Orchestrator) getAllValidMoveCoordsForEntity(entityId EntityID) {
 	return coordsOfValidMovesForEntity
 }
 
+func (o *Orchestrator) isEntityMoveValid(entityId EntityID, coordToMoveTo Coord) bool {
+	// Business rule: we can't move the entity if it doesn't have the movable property
+	if !o.entityManager.EntityHasProperty(entityId, MOVABLE) {
+		return false
+	}
+	coordOfEntity := o.entityManager.GetCoordOfEntityByID(entityId)
+	
+	if coordOfEntity.IsAtRightOf(coordToMoveTo) {
+		// Moving to the right
+		entityIdsAtRightOfEntity := o.entityManager.GetEntityIDsAtCoord(coordToMoveTo)
+		for _, entityIdToRight := range entityIdsAtRightOfEntity {
+			if o.entityManager.EntityHasProperty(entityIdToRight, OUTPUT_LEFT) {
+				return false
+			}
+			if o.entityManager.EntityHasProperty(entityIdToRight, MOVABLE) {
+				return false
+			}
+		}
+		return true
+	} else if coordOfEntity.IsAtLeftOf(coordToMoveTo) {
+		// Moving to the left
+		entityIdsAtLeftOfEntity := o.entityManager.GetEntityIDsAtCoord(coordToMoveTo)
+		for _, entityIdToLeft := range entityIdsAtLeftOfEntity {
+			if o.entityManager.EntityHasProperty(entityIdToLeft, OUTPUT_RIGHT) {
+				return false
+			}
+			if o.entityManager.EntityHasProperty(entityIdToLeft, MOVABLE) {
+				return false
+			}
+		}
+		return true
+	} else if coordOfEntity.IsAtTopOf(coordToMoveTo) {
+		// Moving to the top
+		entityIdsAtTopOfEntity := o.entityManager.GetEntityIDsAtCoord(coordToMoveTo)
+		for _, entityIdToTop := range entityIdsAtTopOfEntity {
+			if o.entityManager.EntityHasProperty(entityIdToTop, OUTPUT_BOTTOM) {
+				return false
+			}
+			if o.entityManager.EntityHasProperty(entityIdToTop, MOVABLE) {
+				return false
+			}
+		}
+		return true
+	} else if coordOfEntity.IsAtBottomOf(coordToMoveTo) {
+		// Moving to the bottom
+		entityIdsAtBottomOfEntity := o.entityManager.GetEntityIDsAtCoord(coordToMoveTo)
+		for _, entityIdToBottom := range entityIdsAtBottomOfEntity {
+			if o.entityManager.EntityHasProperty(entityIdToBottom, OUTPUT_TOP) {
+				return false
+			}
+			if o.entityManager.EntityHasProperty(entityIdToBottom, MOVABLE) {
+				return false
+			}
+		}
+		return true
+	}
+	return false
+}
+
+
+/*
+
+is_entity_move_valid(entity_id, coord_to_move_to) {
+	if !entity_manager.entity_has_property(entity_id, 'movable'):
+		return false
+	coord_of_entity = entity_manager.get_coord_of_entity_by_id(entity_id)
+	if coord_of_entity.isAtRightOf(coord_to_move_to):
+		coord_to_move_to = coord_to_right <- alias the variable
+		entity_ids_at_right_of_entity = entity_manager.get_entity_ids_at_coord(coord_to_right)
+		for entity_id_to_right in entity_ids_at_right_of_entity:
+			if entity_manager.entity_has_property(entity_id_to_right, 'output_left'):
+				return false
+			if entity_manager.entity_has_property(entity_id_to_right, 'movable'):
+				return false
+		return true
+	elif coord_of_entity.isATLeftOf(coord_to_move_to):
+		coord_to_move_to = coord_to_left <- alias the variable
+		entity_ids_at_left_of_entity = entity_manager.get_entity_ids_at_coord(coord_to_left)
+		for entity_id_to_left in entity_ids_at_left_of_entity:
+			if entity_manager.entity_has_property(entity_id_to_left, 'output_right'):
+				return false
+			if entity_manager.entity_has_property(entity_id_to_left, 'movable'):
+				return false
+		return true
+	elif coord_of_entity.isAtTopOf(coord_to_move_to):
+		coord_to_move_to = coord_to_top <- alias the variable
+		entity_ids_at_top_of_entity = entity_manager.get_entity_ids_at_coord(coord_to_top)
+		for entity_id_to_top in entity_ids_at_top_of_entity:
+			if entity_manager.entity_has_property(entity_id_to_top, 'output_bottom'):
+				return false
+			if entity_manager.entity_has_property(entity_id_to_top, 'movable'):
+				return false
+		return true
+	elif coord_of_entity.isAtBottomOf(coord_to_move_to):
+		coord_to_move_to = coord_to_bottom <- alias the variable
+		entity_ids_at_bottom_of_entity = entity_manager.get_entity_ids_at_coord(coord_to_bottom)
+		for entity_id_to_bottom in entity_ids_at_bottom_of_entity:
+			if entity_manager.entity_has_property(entity_id_to_bottom, 'output_top'):
+				return false
+			if entity_manager.entity_has_property(entity_id_to_bottom, 'movable'):
+				return false
+		return true
+	return false
+}
+
+*/
+
 func (o *Orchestrator) mapOutputDirectionToCoord(entityID EntityID, outputDirection Property) Coord {
 	switch outputDirection {
 	case OUTPUT_RIGHT:
@@ -439,48 +546,5 @@ func (o *Orchestrator) updateDeleters() {
 			unique_destinations.append(coord)
 			unique_entity_ids.append(entity_id)
 		return true
-	}
-	
-	is_entity_move_valid(entity_id, coord_to_move_to) {
-        if !entity_manager.entity_has_property(entity_id, 'movable'):
-            return false
-		coord_of_entity = entity_manager.get_coord_of_entity_by_id(entity_id)
-		if coord_of_entity.isAtRightOf(coord_to_move_to):
-			coord_to_move_to = coord_to_right <- alias the variable
-			entity_ids_at_right_of_entity = entity_manager.get_entity_ids_at_coord(coord_to_right)
-			for entity_id_to_right in entity_ids_at_right_of_entity:
-                if entity_manager.entity_has_property(entity_id_to_right, 'output_left'):
-                    return false
-                if entity_manager.entity_has_property(entity_id_to_right, 'movable'):
-                    return false
-			return true
-		elif coord_of_entity.isATLeftOf(coord_to_move_to):
-            coord_to_move_to = coord_to_left <- alias the variable
-            entity_ids_at_left_of_entity = entity_manager.get_entity_ids_at_coord(coord_to_left)
-            for entity_id_to_left in entity_ids_at_left_of_entity:
-                if entity_manager.entity_has_property(entity_id_to_left, 'output_right'):
-                    return false
-                if entity_manager.entity_has_property(entity_id_to_left, 'movable'):
-                    return false
-            return true
-		elif coord_of_entity.isAtTopOf(coord_to_move_to):
-            coord_to_move_to = coord_to_top <- alias the variable
-            entity_ids_at_top_of_entity = entity_manager.get_entity_ids_at_coord(coord_to_top)
-            for entity_id_to_top in entity_ids_at_top_of_entity:
-                if entity_manager.entity_has_property(entity_id_to_top, 'output_bottom'):
-                    return false
-                if entity_manager.entity_has_property(entity_id_to_top, 'movable'):
-                    return false
-            return true
-		elif coord_of_entity.isAtBottomOf(coord_to_move_to):
-            coord_to_move_to = coord_to_bottom <- alias the variable
-            entity_ids_at_bottom_of_entity = entity_manager.get_entity_ids_at_coord(coord_to_bottom)
-            for entity_id_to_bottom in entity_ids_at_bottom_of_entity:
-                if entity_manager.entity_has_property(entity_id_to_bottom, 'output_top'):
-                    return false
-                if entity_manager.entity_has_property(entity_id_to_bottom, 'movable'):
-                    return false
-            return true
-		return false
 	}
 }
