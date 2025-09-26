@@ -72,24 +72,40 @@ func (o *Orchestrator) getAllValidMoveCoordsForEntity(entityId EntityID) {
 	return coordsOfValidMovesForEntity
 }
 
-/*
-map_output_direction_to_coord(entity_id, output_direction) {
-	if output_direction == "output_right":
-		// 0. get coord at entity
-		// 1. set coord to be the right of that entity ZCB (Come back to fix this)
-		coord = get_coord_at_right_of(entity_id)
-	elif output_direction == "output_left":
-		coord = get_coord_at_left_of(entity_id)
-	elif output_direction == "output_top":
-		coord = get_coord_at_top_of(entity_id)
-	elif output_direction == "output_bottom":
-		coord = get_coord_at_bottom_of(entity_id)
-	return coord
+func (o *Orchestrator) mapOutputDirectionToCoord(entityID EntityID, outputDirection Property) Coord {
+	switch outputDirection {
+	case OUTPUT_RIGHT:
+		return o.getCoordAtRightOf(entityID)
+	case OUTPUT_LEFT:
+		return o.getCoordAtLeftOf(entityID)
+	case OUTPUT_TOP:
+		return o.getCoordAtTopOf(entityID)
+	case OUTPUT_BOTTOM:
+		return o.getCoordAtBottomOf(entityID)
+	default:
+		// Return the current coordinate if direction is not recognized
+		return o.entityManager.GetCoordOfEntityByID(entityID)
+	}
 }
-*/
 
-func (o *Orchestrator) mapOutputDirectionToCoord(xxx) xxx {
-	if 
+func (o *Orchestrator) getCoordAtRightOf(entityID EntityID) Coord {
+	coordOfEntity := o.entityManager.GetCoordOfEntityByID(entityID)
+	return NewCoord(coordOfEntity.Row, coordOfEntity.Col+1)
+}
+
+func (o *Orchestrator) getCoordAtLeftOf(entityID EntityID) Coord {
+	coordOfEntity := o.entityManager.GetCoordOfEntityByID(entityID)
+	return NewCoord(coordOfEntity.Row, coordOfEntity.Col-1)
+}
+
+func (o *Orchestrator) getCoordAtTopOf(entityID EntityID) Coord {
+	coordOfEntity := o.entityManager.GetCoordOfEntityByID(entityID)
+	return NewCoord(coordOfEntity.Row-1, coordOfEntity.Col)
+}
+
+func (o *Orchestrator) getCoordAtBottomOf(entityID EntityID) Coord {
+	coordOfEntity := o.entityManager.GetCoordOfEntityByID(entityID)
+	return NewCoord(coordOfEntity.Row+1, coordOfEntity.Col)
 }
 
 
@@ -466,27 +482,5 @@ func (o *Orchestrator) updateDeleters() {
                     return false
             return true
 		return false
-	}
-	
-	
-	
-	
-	map_output_direction_to_coord(entity_id, output_direction) {
-		if output_direction == "output_right":
-            // 0. get coord at entity
-            // 1. set coord to be the right of that entity ZCB (Come back to fix this)
-			coord = get_coord_at_right_of(entity_id)
-		elif output_direction == "output_left":
-			coord = get_coord_at_left_of(entity_id)
-		elif output_direction == "output_top":
-			coord = get_coord_at_top_of(entity_id)
-		elif output_direction == "output_bottom":
-			coord = get_coord_at_bottom_of(entity_id)
-		return coord
-	}
-	
-	get_coord_at_right_of(entity_id) {
-		coord_of_entity = get_coord_of_entity_by_id(entity_id)
-		
 	}
 }
