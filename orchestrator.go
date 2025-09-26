@@ -21,34 +21,6 @@ func (o *Orchestrator) Step() {
 }
 
 
-/*
-
-	update_adders() {
-		adder_entity_ids = entitiesdb.get_all_entity_ids_with_property('adder')
-		for adder_entity_id in adder_entity_ids:	
-			// 0. create an entity to spawn (in the future this might be the type of adder)
-			// Once we create the entity we can assume the props are valid as the check would be on the constructor
-            if !should_place_new_entity():
-                continue
-
-            props_for_potential_new_entity = ['movable']
-
-            // 0. validate that the props combination is legal
-            if !is_valid_props(props_for_potential_new_entity):
-                continue
-			
-			
-			// 1. validate to check if we can spawn an entity at the coord (generic, used by adder) with the props
-			coord_of_adder_entity = entity_manager.get_coord_of_entity_by_id(adder_entity_id)
-
-			can_spawn = can_spawn_entity_at_coord_with_props(props_for_potential_new_entity, coord_of_adder_entity)
-			// 2. actually spawn an entity at that coord
-			entity_manager.add_entity_at_coord_with_props(props_for_potential_new_entity, coord_of_adder_entity)
-	}
-
-*/
-
-
 func (o *Orchestrator) updateAdders() {
 	adderEntityIds := o.entityManager.GetAllEntityIDsWithProperty(ADDER)
 	for adderEntityId := range adderEntityIds {
