@@ -131,54 +131,6 @@ func (o *Orchestrator) isEntityMoveValid(entityId EntityID, coordToMoveTo Coord)
 	return false
 }
 
-
-/*
-
-is_entity_move_valid(entity_id, coord_to_move_to) {
-	if !entity_manager.entity_has_property(entity_id, 'movable'):
-		return false
-	coord_of_entity = entity_manager.get_coord_of_entity_by_id(entity_id)
-	if coord_of_entity.isAtRightOf(coord_to_move_to):
-		coord_to_move_to = coord_to_right <- alias the variable
-		entity_ids_at_right_of_entity = entity_manager.get_entity_ids_at_coord(coord_to_right)
-		for entity_id_to_right in entity_ids_at_right_of_entity:
-			if entity_manager.entity_has_property(entity_id_to_right, 'output_left'):
-				return false
-			if entity_manager.entity_has_property(entity_id_to_right, 'movable'):
-				return false
-		return true
-	elif coord_of_entity.isATLeftOf(coord_to_move_to):
-		coord_to_move_to = coord_to_left <- alias the variable
-		entity_ids_at_left_of_entity = entity_manager.get_entity_ids_at_coord(coord_to_left)
-		for entity_id_to_left in entity_ids_at_left_of_entity:
-			if entity_manager.entity_has_property(entity_id_to_left, 'output_right'):
-				return false
-			if entity_manager.entity_has_property(entity_id_to_left, 'movable'):
-				return false
-		return true
-	elif coord_of_entity.isAtTopOf(coord_to_move_to):
-		coord_to_move_to = coord_to_top <- alias the variable
-		entity_ids_at_top_of_entity = entity_manager.get_entity_ids_at_coord(coord_to_top)
-		for entity_id_to_top in entity_ids_at_top_of_entity:
-			if entity_manager.entity_has_property(entity_id_to_top, 'output_bottom'):
-				return false
-			if entity_manager.entity_has_property(entity_id_to_top, 'movable'):
-				return false
-		return true
-	elif coord_of_entity.isAtBottomOf(coord_to_move_to):
-		coord_to_move_to = coord_to_bottom <- alias the variable
-		entity_ids_at_bottom_of_entity = entity_manager.get_entity_ids_at_coord(coord_to_bottom)
-		for entity_id_to_bottom in entity_ids_at_bottom_of_entity:
-			if entity_manager.entity_has_property(entity_id_to_bottom, 'output_top'):
-				return false
-			if entity_manager.entity_has_property(entity_id_to_bottom, 'movable'):
-				return false
-		return true
-	return false
-}
-
-*/
-
 func (o *Orchestrator) mapOutputDirectionToCoord(entityID EntityID, outputDirection Property) Coord {
 	switch outputDirection {
 	case OUTPUT_RIGHT:
@@ -434,41 +386,6 @@ func (o *Orchestrator) updateDeleters() {
 		}
 	}
 }
-
-    // checks to make sure props are internally consistent inside of the entity
-    is_valid_props(props) {
-        /*
-        Business rules:
-            0. Entities must have at least one prop
-            1. Entities can only be: output_left, output_right, output_top, output_bottom, adder , deleter, movable
-            2. Entities can have only one of: output_left, output_right, output_top, output_bottom, adder , deleter, movable
-            3. Entities can only have 1 prop unless it is a combinatino of (output_left, output_right, output_top and output_bottom)
-        */
-        valid_props = ['output_left','output_right','output_top','output_bottom','adder','deleter','movable']
-        output_props = ['output_left','output_right','output_top','output_bottom']
-        
-        // Rule 0:
-        if len(props) == 0:
-            return false
-
-        // Rule 3:
-        if len(props) > 1:
-            for prop in props:
-                if prop not in output_props:
-                    return false
-
-        seen_props = []
-        for prop in props:
-            // Rule 1:
-            if prop not in valid_props:
-                return false
-            // Rule 2:
-            if prop in seen_props:
-                return false
-            seen_props.append(prop)
-
-        return true
-    }
 	
 	update_entities_already_moved(entity_ids_already_moved,moves) {
 		// 1. Get unique entity IDs from the moves
