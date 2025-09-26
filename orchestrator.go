@@ -34,7 +34,17 @@ func (o *Orchestrator) executeMoves(entityIds []EntityID) {
 
 }
 
-func (o *Orchestrator) generateMoves(entityIds []EntityID) {
+func (o *Orchestrator) generateMoves(entityIdsAlreadyMoved []EntityID) []Move {
+	allValidPossibleMoves := o.getAllValidPossibleMoves(entityIdsAlreadyMoved)
+	finalMoves := o.resolveFinalMovesFromAllValidMoves(allValidPossibleMoves)
+	return finalMoves
+}
+
+func (o *Orchestrator) getAllValidPossibleMoves(entityIdsAlreadyMoved []EntityID) []Move {
+
+}
+
+func (o *Orchestrator) resolveFinalMovesFromAllValidMoves() []Move {
 
 }
 
