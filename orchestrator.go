@@ -47,18 +47,36 @@ func (o *Orchestrator) getAllValidPossibleMoves(entityIdsAlreadyMoved []EntityID
 		if containsEntity(entityIdsAlreadyMoved, entityId) {
             continue // skip entities that already moved
         }
-		validMoves := o.getAllValidMovesForEntity(entityId)
-		for _, validMove := range validMoves {
+		validMoveCoords := o.getAllValidMoveCoordsForEntity(entityId)
+		for _, validMoveCoord := range validMoveCoords {
 			allValidPossibleMoves = append(allValidPossibleMoves, Move{
                 EntityID: entityId,
-                Coord:    move,
+                Coord:    validMoveCoord,
             })
 		}
 	}
 	return allValidPossibleMoves
 }
 
-func (o *Orchestrator) getAllValidMovesForEntity(entityId EntityID) {
+
+func (o *Orchestrator) getAllValidMoveCoordsForEntity(entityId EntityID) {
+	coordsOfValidMovesForEntity := make([]Coord, 0, 50)
+	outputDirections := o.getOutputDirectionsForCellWithEntityID(entityId)
+	for outputDirection := range outputDirections {
+		coordToMoveTo := o.mapOutputDirectionToCoord(entityId, outputDirection)
+		isValidMove := o.isEntityMoveValid(entityId, coordToMoveTo)
+		if isValidMove {
+			coords_of_valid_moves_for_entity := append(coords_of_valid_moves_for_entity, coordToMoveTo)
+		}
+	}
+	return coordsOfValidMovesForEntity
+}
+
+func (o *Orchestrator) mapOutputDirectionToCoord(xxx) xxx {
+
+}
+
+func (o *Orchestrator) getOutputDirectionsForCellWithEntityID(entityID EntityID) xx {
 
 }
 
@@ -357,17 +375,6 @@ func (o *Orchestrator) updateDeleters() {
 			unique_destinations.append(coord)
 			unique_entity_ids.append(entity_id)
 		return true
-	}
-	
-	get_all_valid_moves_for_entity(entity_id): []Coord {
-		coords_of_valid_moves_for_entity = []
-		output_directions = get_output_directions_for_cell_with_entity(entity_id)
-		for output_direction in output_directions:
-			coord_to_move_to = map_output_direction_to_coord(entity_id, output_direction)
-			is_valid_move = is_entity_move_valid(entity, coord_to_move_to)
-			if is_valid_move:
-				coords_of_valid_moves_for_entity.append(coord_to_move_to)
-		return coords_of_valid_moves_for_entity
 	}
 	
 	// exclude considering output directions of properties of self
