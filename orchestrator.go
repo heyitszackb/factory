@@ -55,7 +55,7 @@ func (o *Orchestrator) updateAdders() {
 		// 0. create an entity to spawn (in the future this might be the type of adder)
 		// Once we create the entity we can assume the props are valid as the check would be on the constructor
 		
-		if !shouldPlaceNewEntity {
+		if !shouldPlaceNewEntity() {
 			continue
 		}
 		
@@ -71,6 +71,7 @@ func (o *Orchestrator) updateAdders() {
 		// ZCB ADD
 		canSpawn := can_spawn_entity_at_coord_with_props(props_for_potential_new_entity, coord)
 		*/
+		canSpawn := canSpawnEntityAtCoordWithProperties(propertiesForPotentialNewEntity, coordOfAdderEntity)
 
 		// 2. actually spawn an entity at that coord
 		o.entityManager.AddEntityAtCoordWithProperties(propertiesForPotentialNewEntity, coordOfAdderEntity)
@@ -143,6 +144,56 @@ func shouldPlaceNewEntity() bool {
 	return rand.Float64() < 0.01
 }
 
+func (o *Orchestrator) canSpawnEntityAtCoordWithProperties(properties []Property, coord Coord) bool {
+	// before we add an entity we need to make sure the entity is valid given the other entities on it's coord		
+	entityIdsAtCoord = o.entity_manager.GetEntityIDsAtCoord(coord)
+	/* As a business logic rule, I will say for now:
+		- there can only by one entity with property movable in a cell
+		- there can only be one entity with property adder in a cell
+		- there can only be one entity with property deleter in a cell
+	*/
+	numAdders := 0
+	numDeleters := 0
+	numMovable := 0
+
+	for _, entityIdAtCoord := range entityIdsAtCoord {
+		if o.entityManager.EntityHasProperty(entityIdAtCoord, ADDER) {
+			numAdders++
+		}
+		if o.entityManager.EntityHasProperty(entityIdAtCoord, DELETER) {
+			numDeleters++
+		}
+		if o.entityManager.EntityHasProperty(entityIdAtCoord, MOVABLE) {
+			numMovable++
+		}
+	}
+
+	// if the new entity wants any of these properties and there's already one, reject
+	if hasProp(props, ADDER) && numAdders > 0 {
+		return false
+	}
+	if hasProp(props, DELETER) && numDeleters > 0 {
+		return false
+	}
+	if hasProp(props, MOVABLE) && numMovable > 0 {
+		return false
+	}
+
+	return true
+	
+}
+
+func hasProp(props []Property, p Property) bool {
+	for _, v := range props {
+		if v == p {
+			return true
+		}
+	}
+	return false
+}
+
+
+
 
 
 func (o *Orchestrator) updateDeleters() {
@@ -203,37 +254,6 @@ func (o *Orchestrator) updateDeleters() {
             return true
         return false
     }
-	
-	can_spawn_entity_at_coord_with_props(props: []string, coord): bool {
-		// before we add an entity we need to make sure the entity is valid given the other entities on it's coord		
-		
-		entity_ids_at_coord = entity_manager.get_entity_ids_at_coord(coord)
-		/* As a business logic rule, I will say for now:
-		- there can only by one entity with property movable in a cell
-		- there can only be one entity with property adder in a cell
-		- there can only be one entity with property deleter in a cell
-		*/
-		
-		num_adders = 0
-		num_deleters = 0
-		num_movable = 0
-		for entitiy_id_at_coord in entity_ids_at_coord:
-            if entity_manager.entity_has_property(entitiy_id_at_coord, 'adder')
-				num_adders++
-                if entity_manager.entity_has_property(entitiy_id_at_coord, 'deleter')
-				num_deleters++
-                if entity_manager.entity_has_property(entitiy_id_at_coord, 'movable')
-				num_movable++
-		
-        if 'adder' in props and num_adder > 0:
-			return false
-        if 'deleter' in props and num_deleters > 0:
-			return false
-        if 'movable' in props and num_movable > 0:
-			return false
-			
-		return true
-	}
 	
 	move(): void {
 		entity_ids_already_moved = []
