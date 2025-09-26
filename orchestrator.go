@@ -13,11 +13,35 @@ func NewOrchestrator(entityManager *EntityManager) *Orchestrator {
 	}
 }
 
-
-func (o *Orchestrator) Step() {
+func (o *Orchestrator) update() {
 	o.updateAdders()
 	
 	o.updateDeleters()
+}
+
+func (o *Orchestrator) move() {
+	entityIdsAlreadyMoved := make([]EntityID,0,100)
+	moves = o.generateMoves(entityIdsAlreadyMoved)
+
+	for len(moves) > 0 {
+		o.executeMoves(moves)
+		entityIdsAlreadyMoved = o.updateEntityIdsAlreadyMoved(entityIdsAlreadyMoved, moves)
+		moves = o.generateMoves(entityIdsAlreadyMoved)
+	}
+}
+
+func (o *Orchestrator) executeMoves(entityIds []EntityID) {
+
+}
+
+func (o *Orchestrator) generateMoves(entityIds []EntityID) {
+
+}
+
+
+func (o *Orchestrator) Step() {
+	o.update()
+	o.move()
 }
 
 
@@ -219,24 +243,6 @@ func (o *Orchestrator) updateDeleters() {
 
         return true
     }
-
-    // for now, hardcode to some fixed value but can come from other props in the future
-    should_place_new_entity() {
-        if random.randint(1) < 0.01: // for now, spawn a new entity at a 1% chance each frame
-            return true
-        return false
-    }
-	
-	move(): void {
-		entity_ids_already_moved = []
-		moves = generate_moves(entities_already_moved)
-	
-		while len(moves) > 0:
-			execute_moves(moves)
-			entity_ids_already_moved = update_entities_already_moved(entity_ids_already_moved, moves)
-		
-			moves = generate_moves(entity_ids_already_moved)
-	}
 	
 	update_entities_already_moved(entity_ids_already_moved,moves) {
 		// 1. Get unique entity IDs from the moves
