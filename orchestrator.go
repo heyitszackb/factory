@@ -41,7 +41,34 @@ func (o *Orchestrator) generateMoves(entityIdsAlreadyMoved []EntityID) []Move {
 }
 
 func (o *Orchestrator) getAllValidPossibleMoves(entityIdsAlreadyMoved []EntityID) []Move {
+	entityIds = o.entity_manager.GetAllEntityIDs()
+	allValidPossibleMoves := make([]Move, 0, 100)
+	for _, entityId := range entityIds {
+		if containsEntity(entityIdsAlreadyMoved, entityId) {
+            continue // skip entities that already moved
+        }
+		validMoves := o.getAllValidMovesForEntity(entityId)
+		for _, validMove := range validMoves {
+			allValidPossibleMoves = append(allValidPossibleMoves, Move{
+                EntityID: entityId,
+                Coord:    move,
+            })
+		}
+	}
+	return allValidPossibleMoves
+}
 
+func (o *Orchestrator) getAllValidMovesForEntity(entityId EntityID) {
+
+}
+
+func containsEntity(list []EntityID, id EntityID) bool {
+    for _, v := range list {
+        if v == id {
+            return true
+        }
+    }
+    return false
 }
 
 func (o *Orchestrator) resolveFinalMovesFromAllValidMoves() []Move {
@@ -261,24 +288,6 @@ func (o *Orchestrator) updateDeleters() {
 			if entity_id not in unique_entity_ids:
 				new_entity_ids_already_moved.append(entity_id)
 		return new_entity_ids_already_moved
-	}
-	
-	
-	generate_moves(entities_already_moved): [](entity_id, Coord) {
-		all_valid_possible_moves = get_all_valid_possible_moves(entities_already_moved)			
-		final_moves = resolve_final_moves_from_all_valid_moves(all_valid_possible_moves) 	
-		return final_moves
-	}
-	
-	get_all_valid_possible_moves(entities_already_moved) {
-		entity_ids = entity_manager.get_all_entity_ids() <- returns entity_ids
-		all_valid_possible_moves = []
-		for entity_id in entity_ids:
-			if entity_id in entities_already_moved:
-				valid_moves = get_all_valid_moves_for_entity(entity_id)
-				for valid_move in valid_moves:
-					all_valid_possible_moves.append((entity_id,valid_move))
-		return all_valid_possible_moves
 	}
 	
 	
