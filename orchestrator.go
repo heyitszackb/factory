@@ -25,8 +25,19 @@ func (o *Orchestrator) move() {
 
 	for len(moves) > 0 {
 		o.executeMoves(moves)
-		entityIdsAlreadyMoved = o.updateEntityIdsAlreadyMoved(entityIdsAlreadyMoved, moves)
+		o.updateEntityIdsAlreadyMoved(&entityIdsAlreadyMoved, moves)
 		moves = o.generateMoves(entityIdsAlreadyMoved)
+	}
+}
+
+
+func (o *Orchestrator) updateEntityIdsAlreadyMoved(entityIdsAlreadyMoved *[]EntityID, moves []Move) {
+	// Add unique entity IDs from the moves
+	for _, move := range moves {
+		// Check if this entity ID is not already in the list
+		if !containsEntity(*entityIdsAlreadyMoved, move.EntityID) {
+			*entityIdsAlreadyMoved = append(*entityIdsAlreadyMoved, move.EntityID)
+		}
 	}
 }
 
@@ -386,15 +397,6 @@ func (o *Orchestrator) updateDeleters() {
 		}
 	}
 }
-	
-	update_entities_already_moved(entity_ids_already_moved,moves) {
-		// 1. Get unique entity IDs from the moves
-		new_entity_ids_already_moved = entity_ids_already_moved
-		for entity_id, coord in moves:
-			if entity_id not in unique_entity_ids:
-				new_entity_ids_already_moved.append(entity_id)
-		return new_entity_ids_already_moved
-	}
 	
 	
 	
