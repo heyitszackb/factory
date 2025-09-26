@@ -41,8 +41,10 @@ func (o *Orchestrator) updateEntityIdsAlreadyMoved(entityIdsAlreadyMoved *[]Enti
 	}
 }
 
-func (o *Orchestrator) executeMoves(entityIds []EntityID) {
-
+func (o *Orchestrator) executeMoves(moves []Move) {
+	for _, move := range moves {
+		o.entityManager.MoveEntityWithIDToCoord(move.EntityID, move.Coord)
+	}
 }
 
 func (o *Orchestrator) generateMoves(entityIdsAlreadyMoved []EntityID) []Move {
@@ -397,13 +399,6 @@ func (o *Orchestrator) updateDeleters() {
 		}
 	}
 }
-	
-	
-	
-	execute_final_moves(final_moves) {
-		for entity_id, Coord in final_moves:
-			entity_manager.move_entity_with_id_to_coord(entity_id, Coord)
-	}
 	
 	
 	resolve_final_moves_from_all_valid_moves(moves_list:[](entity_id, Coord)) { // returns one move per entity
