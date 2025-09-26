@@ -72,12 +72,63 @@ func (o *Orchestrator) getAllValidMoveCoordsForEntity(entityId EntityID) {
 	return coordsOfValidMovesForEntity
 }
 
-func (o *Orchestrator) mapOutputDirectionToCoord(xxx) xxx {
+/*
+map_output_direction_to_coord(entity_id, output_direction) {
+	if output_direction == "output_right":
+		// 0. get coord at entity
+		// 1. set coord to be the right of that entity ZCB (Come back to fix this)
+		coord = get_coord_at_right_of(entity_id)
+	elif output_direction == "output_left":
+		coord = get_coord_at_left_of(entity_id)
+	elif output_direction == "output_top":
+		coord = get_coord_at_top_of(entity_id)
+	elif output_direction == "output_bottom":
+		coord = get_coord_at_bottom_of(entity_id)
+	return coord
+}
+*/
 
+func (o *Orchestrator) mapOutputDirectionToCoord(xxx) xxx {
+	if 
 }
 
-func (o *Orchestrator) getOutputDirectionsForCellWithEntityID(entityID EntityID) xx {
 
+func (o *Orchestrator) getOutputDirectionsForCellWithEntityID(entityID EntityID) []Property {
+	outputDirectionProperties := []Property{}
+	coordOfEntity := o.entityManager.GetCoordOfEntityByID(entityID)
+	entityIdsOnCellWithEntity := o.entityManager.GetEntityIDsAtCoord(coordOfEntity)
+	
+	outputProperties := []Property{
+		OUTPUT_LEFT,
+		OUTPUT_RIGHT,
+		OUTPUT_TOP,
+		OUTPUT_BOTTOM,
+	}
+	
+	for _, entityIdOnCellWithEntity := range entityIdsOnCellWithEntity {
+		if entityIdOnCellWithEntity == entityID {
+			continue
+		}
+		entityProperties := o.entityManager.GetAllPropertiesOfEntityWithID(entityIdOnCellWithEntity)
+		for _, outputProperty := range outputProperties {
+			for _, entityProperty := range entityProperties {
+				if outputProperty == entityProperty {
+					// Check if outputProperty is not already in outputDirectionProperties
+					found := false
+					for _, existingProperty := range outputDirectionProperties {
+						if existingProperty == outputProperty {
+							found = true
+							break
+						}
+					}
+					if !found {
+						outputDirectionProperties = append(outputDirectionProperties, property1)
+					}
+				}
+			}
+		}
+	}
+	return outputDirectionProperties
 }
 
 func containsEntity(list []EntityID, id EntityID) bool {
@@ -118,10 +169,7 @@ func (o *Orchestrator) updateAdders() {
 
 		// 1. validate to check if we can spawn an entity at the coord (generic, used by adder) with the props
 		coordOfAdderEntity := o.entityManager.GetCoordOfEntityByID(adderEntityId)
-		/*
-		// ZCB ADD
-		canSpawn := can_spawn_entity_at_coord_with_props(props_for_potential_new_entity, coord)
-		*/
+		
 		canSpawn := canSpawnEntityAtCoordWithProperties(propertiesForPotentialNewEntity, coordOfAdderEntity)
 
 		// 2. actually spawn an entity at that coord
@@ -375,29 +423,6 @@ func (o *Orchestrator) updateDeleters() {
 			unique_destinations.append(coord)
 			unique_entity_ids.append(entity_id)
 		return true
-	}
-	
-	// exclude considering output directions of properties of self
-	get_output_directions_for_cell_with_entity(entity_id) {
-		output_direction_properties = []
-		coord_of_entity = entity_manager.get_coord_of_entity_by_id(entity_id)
-		entity_ids_on_cell_with_entity = entity_manager.get_entity_ids_at_coord(coord_of_entity)
-		output_properties = [
-			"output_left",
-			"output_right",
-			"output_top",
-			"output_bottom",
-		]
-		for entity_id_on_cell_with_entity in entity_ids_on_cell_with_entity:
-            if entity_id_on_cell_with_entity == entity_id:
-                continue
-			properties = entity_manager.get_all_properties_of_entity_with_id(entity_id_on_cell_with_entity)
-			for property1 in output_properties:
-				for property2 in properties:
-					if property1 == property2:
-						if property1 not in output_direction_properties:
-							output_direction_properties.append(property1)
-		return output_direction_properties
 	}
 	
 	is_entity_move_valid(entity_id, coord_to_move_to) {
